@@ -29,9 +29,6 @@ endif
 
 scriptencoding utf-8
 
-augroup BufTabLine
-autocmd!
-
 hi default link BufTabLineCurrent TabLineSel
 hi default link BufTabLineActive  PmenuSel
 hi default link BufTabLineHidden  TabLine
@@ -178,15 +175,19 @@ function! buftabline#update(zombie)
 	set tabline=%!buftabline#render()
 endfunction
 
+augroup BufTabLine
+autocmd!
 autocmd VimEnter  * call buftabline#update(0)
 autocmd TabEnter  * call buftabline#update(0)
 autocmd BufAdd    * call buftabline#update(0)
 autocmd BufDelete * call buftabline#update(str2nr(expand('<abuf>')))
+augroup END
 
-for s:n in range(1, g:buftabline_plug_max)
-    execute printf("noremap <silent> <Plug>BufTabLine.Go(%d) :exe 'b'.get(buftabline#user_buffers(),%d,'')<cr>", s:n, s:n - 1)
+for s:n in range(1, g:buftabline_plug_max) + ( g:buftabline_plug_max > 0 ? [-1] : [] )
+	let s:b = s:n == -1 ? -1 : s:n - 1
+	execute printf("noremap <silent> <Plug>BufTabLine.Go(%d) :<C-U>exe 'b'.get(buftabline#user_buffers(),%d,'')<cr>", s:n, s:b)
 endfor
-unlet s:n
+unlet! s:n s:b
 
 if v:version < 703
 	function s:transpile()
